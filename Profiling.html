@@ -1,0 +1,1673 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>범죄 심리 및 법과학 프로파일링 통합 플랫폼</title>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg-black: #09090b;
+      --card-bg: #121217;
+      --sky-blue: #38bdf8;
+      --sky-blue-hover: #0ea5e9;
+      --text-main: #f8fafc;
+      --text-sub: #94a3b8;
+      --border-color: #27272a;
+      --blood-red: #ef4444;
+      --success-green: #10b981;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-black);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    /* 공통 헤더 */
+    header {
+      background-color: var(--card-bg);
+      border-bottom: 1px solid var(--border-color);
+      padding: 1.5rem 2rem;
+      text-align: center;
+      position: relative;
+    }
+
+    header h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--sky-blue);
+      margin-bottom: 0.3rem;
+      cursor: pointer;
+    }
+
+    header p {
+      font-size: 0.9rem;
+      color: var(--text-sub);
+    }
+
+    .back-home-btn {
+      position: absolute;
+      left: 20px;
+      top: 50%;
+      transform: translateY(-50%);
+      background-color: #18181b;
+      border: 1px solid var(--border-color);
+      color: var(--sky-blue);
+      padding: 8px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .back-home-btn:hover {
+      background-color: rgba(56, 189, 248, 0.1);
+      border-color: var(--sky-blue);
+    }
+
+    /* 메인 컨테이너 */
+    main {
+      flex: 1;
+      max-width: 1100px;
+      width: 100%;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+
+    .view-section {
+      display: none;
+    }
+
+    .view-section.active {
+      display: block;
+    }
+
+    /* 메인 허브 화면 스타일 */
+    .hero-container {
+      text-align: center;
+      padding: 1rem 1rem;
+    }
+
+    .hero-container h2 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      color: var(--text-main);
+    }
+
+    .hero-container p {
+      color: var(--text-sub);
+      font-size: 1rem;
+      margin-bottom: 2rem;
+      line-height: 1.6;
+    }
+
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+      .menu-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .menu-card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 2rem;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .menu-card:hover {
+      border-color: var(--sky-blue);
+      transform: translateY(-4px);
+      background-color: #15151a;
+    }
+
+    .menu-card h3 {
+      font-size: 1.25rem;
+      color: var(--sky-blue);
+      margin-bottom: 0.6rem;
+    }
+
+    .menu-card p {
+      font-size: 0.9rem;
+      color: var(--text-sub);
+      margin-bottom: 1.2rem;
+    }
+
+    .menu-card-btn {
+      background-color: rgba(56, 189, 248, 0.1);
+      color: var(--sky-blue);
+      border: 1px solid var(--sky-blue);
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 0.9rem;
+      text-align: center;
+      transition: all 0.2s;
+    }
+
+    .menu-card:hover .menu-card-btn {
+      background-color: var(--sky-blue);
+      color: var(--bg-black);
+    }
+
+    /* 공통 카드 스타일 */
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    }
+
+    /* 시뮬레이터 뷰 스타일 */
+    .simulator-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    @media (max-width: 850px) {
+      .simulator-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .control-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .control-group label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .control-group label span.value-highlight {
+      color: var(--sky-blue);
+      font-size: 1rem;
+    }
+
+    input[type="range"], input[type="number"] {
+      width: 100%;
+      accent-color: var(--sky-blue);
+      cursor: pointer;
+      height: 6px;
+      background: var(--border-color);
+      border-radius: 3px;
+    }
+
+    input[type="number"] {
+      background-color: #18181b;
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 10px 12px;
+      border-radius: 8px;
+      height: 42px;
+      font-size: 1rem;
+    }
+
+    .desc-text {
+      font-size: 0.8rem;
+      color: var(--text-sub);
+      margin-top: 0.4rem;
+    }
+
+    .toggle-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 0.5rem;
+    }
+
+    .toggle-btn {
+      flex: 1;
+      background-color: #18181b;
+      border: 1px solid var(--border-color);
+      color: var(--text-sub);
+      padding: 10px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .toggle-btn.active {
+      background-color: rgba(56, 189, 248, 0.15);
+      border-color: var(--sky-blue);
+      color: var(--sky-blue);
+    }
+
+    .result-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .stat-box {
+      background-color: #18181b;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 1rem;
+      text-align: center;
+    }
+
+    .stat-title {
+      font-size: 0.8rem;
+      color: var(--text-sub);
+      margin-bottom: 0.3rem;
+    }
+
+    .stat-value {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--sky-blue);
+    }
+
+    .crime-scene-map {
+      width: 100%;
+      height: 200px;
+      background-color: #09090b;
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .room-outline {
+      width: 80%;
+      height: 80%;
+      border: 2px dashed #3f3f46;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 6px;
+    }
+
+    .room-label {
+      position: absolute;
+      top: 8px;
+      left: 12px;
+      font-size: 0.75rem;
+      color: var(--text-sub);
+    }
+
+    .victim-marker {
+      width: 32px;
+      height: 32px;
+      background-color: #3f3f46;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 0.85rem;
+      z-index: 2;
+      box-shadow: 0 0 10px rgba(0,0,0,0.8);
+    }
+
+    .blood-splatter {
+      position: absolute;
+      border-radius: 50%;
+      background: var(--blood-red);
+      opacity: 0.85;
+      filter: blur(0.5px);
+      transition: all 0.4s ease-in-out;
+    }
+
+    .action-btn-full {
+      width: 100%;
+      background-color: var(--sky-blue);
+      color: var(--bg-black);
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 0.95rem;
+      cursor: pointer;
+      margin-top: 1rem;
+      transition: background-color 0.2s;
+    }
+
+    .action-btn-full:hover {
+      background-color: var(--sky-blue-hover);
+    }
+
+    .insight-box {
+      margin-top: 1rem;
+      background-color: rgba(56, 189, 248, 0.05);
+      border-left: 4px solid var(--sky-blue);
+      padding: 1.2rem;
+      border-radius: 0 8px 8px 0;
+      font-size: 0.88rem;
+      color: #cbd5e1;
+      line-height: 1.6;
+    }
+
+    .insight-box p {
+      margin-bottom: 6px;
+    }
+
+    /* BPA 각도 계산기 뷰 스타일 */
+    .calculator-preview-box {
+      width: 100%;
+      height: 220px;
+      background-color: #09090b;
+      border: 2px solid var(--border-color);
+      border-radius: 12px;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .blood-drop-shape {
+      background-color: var(--blood-red);
+      border-radius: 50%;
+      box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+      transition: all 0.3s ease;
+    }
+
+    /* 통계 대시보드 뷰 스타일 */
+    .dashboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .filter-box {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .filter-box select {
+      background-color: #18181b;
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .chart-container {
+      position: relative;
+      width: 100%;
+      height: 280px;
+      background-color: #18181b;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .contributor-box {
+      background-color: #18181b;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .contributor-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr auto;
+      gap: 12px;
+      align-items: flex-end;
+    }
+
+    @media (max-width: 850px) {
+      .contributor-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .exception-cards-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    @media (max-width: 768px) {
+      .exception-cards-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .exception-card {
+      background-color: #18181b;
+      border: 1px solid var(--border-color);
+      border-left: 4px solid var(--blood-red);
+      border-radius: 10px;
+      padding: 1.2rem;
+    }
+
+    .exception-card h4 {
+      color: var(--blood-red);
+      margin-bottom: 0.5rem;
+      font-size: 1rem;
+    }
+
+    .exception-card p {
+      font-size: 0.85rem;
+      color: var(--text-sub);
+      line-height: 1.5;
+    }
+
+    /* 아카이브 및 가이드 뷰 스타일 */
+    .guide-section {
+      margin-bottom: 1.5rem;
+    }
+
+    .guide-section h3 {
+      color: var(--sky-blue);
+      margin-bottom: 0.8rem;
+      font-size: 1.15rem;
+    }
+
+    .accordion-item {
+      background-color: #18181b;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+
+    .accordion-header {
+      padding: 14px 18px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .accordion-header:hover {
+      background-color: rgba(56, 189, 248, 0.05);
+      color: var(--sky-blue);
+    }
+
+    .accordion-content {
+      padding: 0 18px 14px 18px;
+      font-size: 0.9rem;
+      color: var(--text-sub);
+      line-height: 1.6;
+      border-top: 1px solid var(--border-color);
+      display: none;
+    }
+
+    .accordion-content.open {
+      display: block;
+      padding-top: 14px;
+    }
+
+    /* 퀴즈 뷰 스타일 */
+    .progress-bar-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      font-size: 0.85rem;
+      color: var(--text-sub);
+    }
+
+    .progress-track {
+      flex: 1;
+      height: 6px;
+      background-color: var(--border-color);
+      border-radius: 3px;
+      margin: 0 1rem;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      width: 10%;
+      height: 100%;
+      background-color: var(--sky-blue);
+      transition: width 0.3s ease;
+    }
+
+    .question-title {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: var(--text-main);
+    }
+
+    .scenario-box {
+      background-color: rgba(56, 189, 248, 0.05);
+      border-left: 4px solid var(--sky-blue);
+      padding: 1.2rem;
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 1.5rem;
+      font-size: 0.95rem;
+      color: #e2e8f0;
+      line-height: 1.6;
+    }
+
+    .options-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 2rem;
+    }
+
+    .option-btn {
+      background-color: #18181b;
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 14px 18px;
+      border-radius: 10px;
+      text-align: left;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .option-btn:hover {
+      background-color: rgba(56, 189, 248, 0.1);
+      border-color: var(--sky-blue);
+      color: var(--sky-blue);
+    }
+
+    .option-btn.selected {
+      background-color: rgba(56, 189, 248, 0.2);
+      border-color: var(--sky-blue);
+      color: var(--sky-blue);
+      font-weight: bold;
+    }
+
+    .action-container {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .next-btn, .restart-btn, .explain-btn {
+      background-color: var(--sky-blue);
+      color: var(--bg-black);
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .next-btn:hover, .restart-btn:hover, .explain-btn:hover {
+      background-color: var(--sky-blue-hover);
+    }
+
+    .result-container {
+      text-align: center;
+      display: none;
+    }
+
+    .result-score {
+      font-size: 3rem;
+      font-weight: 800;
+      color: var(--sky-blue);
+      margin: 1rem 0;
+    }
+
+    .result-desc {
+      color: var(--text-sub);
+      margin-bottom: 2rem;
+      line-height: 1.6;
+    }
+
+    .result-btns {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 1.5rem;
+    }
+
+    .explanation-container {
+      display: none;
+    }
+
+    .explanation-card {
+      background-color: #18181b;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 1.2rem;
+      margin-bottom: 1rem;
+      text-align: left;
+    }
+
+    .explanation-card h4 {
+      color: var(--sky-blue);
+      margin-bottom: 0.5rem;
+      font-size: 1rem;
+    }
+
+    .explanation-card p {
+      font-size: 0.9rem;
+      color: #cbd5e1;
+      line-height: 1.5;
+    }
+
+    .correct-answer-text {
+      color: var(--success-green);
+      font-weight: 600;
+      margin-top: 0.4rem;
+      font-size: 0.85rem;
+    }
+
+    /* 프로파일링 보고서 뷰 스타일 */
+    .report-box {
+      background-color: #18181b;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .report-header-title {
+      text-align: center;
+      border-bottom: 2px solid var(--sky-blue);
+      padding-bottom: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .report-header-title h3 {
+      color: var(--sky-blue);
+      font-size: 1.4rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .report-header-title p {
+      font-size: 0.85rem;
+      color: var(--text-sub);
+    }
+
+    .report-meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.9rem;
+      background-color: #121217;
+      padding: 1rem;
+      border-radius: 8px;
+    }
+
+    .report-section-title {
+      font-size: 1rem;
+      color: var(--sky-blue);
+      margin-top: 1.2rem;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+
+    .report-content-text {
+      font-size: 0.9rem;
+      color: #e2e8f0;
+      line-height: 1.6;
+    }
+
+    @media print {
+      body {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+      }
+      header, footer, .back-home-btn, .action-btn-full, .contributor-box {
+        display: none !important;
+      }
+      .card, .report-box {
+        background-color: #ffffff !important;
+        border: 1px solid #ccc !important;
+        color: #000000 !important;
+        box-shadow: none !important;
+      }
+      .report-header-title h3, .report-section-title {
+        color: #0284c7 !important;
+      }
+      .report-meta-grid {
+        background-color: #f1f5f9 !important;
+        color: #000000 !important;
+      }
+      .report-content-text {
+        color: #334155 !important;
+      }
+    }
+
+    /* 푸터 */
+    footer {
+      text-align: center;
+      padding: 1.5rem;
+      font-size: 0.8rem;
+      color: var(--text-sub);
+      border-top: 1px solid var(--border-color);
+      background-color: var(--card-bg);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 공통 헤더 -->
+  <header>
+    <button class="back-home-btn" id="homeBtn" style="display: none;" onclick="switchView('main')">&larr; 메인으로</button>
+    <h1 onclick="switchView('main')">🔍 범죄 심리 &middot; 법과학 프로파일링 플랫폼</h1>
+    <p>범죄자의 성격 특성과 현장 법의학적 혈흔 형태 분석(BPA) 연구 플랫폼</p>
+  </header>
+
+  <!-- 메인 컨테이너 -->
+  <main>
+    
+    <!-- 1. 메인 홈 허브 뷰 -->
+    <section id="view-main" class="view-section active">
+      <div class="hero-container">
+        <h2>어떤 서비스를 이용하시겠습니까?</h2>
+        <p>성격 심리학과 법과학 혈흔수적분석(BPA) 데이터를 결합한 통합 인터랙티브 연구 플랫폼입니다.</p>
+        
+        <div class="menu-grid">
+          <div class="menu-card" onclick="switchView('simulator')">
+            <div>
+              <h3>🧪 범죄 성격-법의학 시뮬레이터</h3>
+              <p>외향성/충동성 슬라이더와 피해자 저항 여부를 입력하여 예상 타격 횟수와 혈흔 비산 범위를 실시간 시각화합니다.</p>
+            </div>
+            <div class="menu-card-btn">시뮬레이터 실행하기 &rarr;</div>
+          </div>
+
+          <div class="menu-card" onclick="switchView('calculator')">
+            <div>
+              <h3>📐 BPA 혈흔 입사 각도 계산기</h3>
+              <p>혈물의 너비와 길이 값을 입력하여 삼각함수 공식으로 비산 혈흔의 입사 각도를 실시간 정밀 계산합니다.</p>
+            </div>
+            <div class="menu-card-btn">계산기 실행하기 &rarr;</div>
+          </div>
+
+          <div class="menu-card" onclick="switchView('dashboard')">
+            <div>
+              <h3>📊 판례 데이터 통계 대시보드</h3>
+              <p>실내 날붙이 살인 사건 코딩 데이터 산점도 및 나만의 가상 판례 데이터 추가(Custom Contributor) 기능.</p>
+            </div>
+            <div class="menu-card-btn">대시보드 열기 &rarr;</div>
+          </div>
+
+          <div class="menu-card" onclick="switchView('archive')">
+            <div>
+              <h3>📚 연구 아카이브 및 가이드 뷰어</h3>
+              <p>변수 코딩 가이드라인, Eysenck 성격 이론, BPA 역학 원리, 논문 초록 및 한계점 열람.</p>
+            </div>
+            <div class="menu-card-btn">가이드 열람하기 &rarr;</div>
+          </div>
+
+          <div class="menu-card" onclick="switchView('quiz')">
+            <div>
+              <h3>🔍 법과학 프로파일링 퀴즈 및 진단</h3>
+              <p>논문 기반의 10가지 심층 퀴즈를 풀고 법의학적 추론 능력과 프로파일링 지식을 진단받아 보세요.</p>
+            </div>
+            <div class="menu-card-btn">퀴즈 풀기 시작 &rarr;</div>
+          </div>
+
+          <div class="menu-card" onclick="generateReportFromHub()">
+            <div>
+              <h3>📄 법과학 프로파일링 감정서 생성</h3>
+              <p>시뮬레이터 설정값을 기반으로 전문 법의학-심리 프로파일링 감정서 문서를 즉시 발급합니다.</p>
+            </div>
+            <div class="menu-card-btn">감정서 즉시 생성 &rarr;</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. 범죄 성격-법의학 시뮬레이터 뷰 -->
+    <section id="view-simulator" class="view-section">
+      <div class="card">
+        <h2 style="color:var(--sky-blue); margin-bottom: 1.5rem;">🧪 범죄 성격-법의학 시뮬레이터</h2>
+        
+        <div class="simulator-grid">
+          <div>
+            <div class="control-group">
+              <label for="extroversionRange">
+                <span>범죄자 외향성 / 충동성 점수</span>
+                <span class="value-highlight" id="extroValue">3.0 점</span>
+              </label>
+              <input type="range" id="extroversionRange" min="1" max="5" step="0.5" value="3" oninput="updateSimulation()">
+              <div class="desc-text">1점(내향/계획형) ~ 5점(외향/충동·자극추구형)</div>
+            </div>
+
+            <div class="control-group">
+              <label>피해자 물리적 저항 유무</label>
+              <div class="toggle-group">
+                <button type="button" id="resistanceNoBtn" class="toggle-btn" onclick="setResistance(0)">저항 없음 (0)</button>
+                <button type="button" id="resistanceYesBtn" class="toggle-btn active" onclick="setResistance(1)">저항 있음 (1)</button>
+              </div>
+              <div class="desc-text">피해자의 물리적 저항은 혈흔 비산 범위를 증폭시키는 매개 변수입니다.</div>
+            </div>
+
+            <div class="result-stats">
+              <div class="stat-box">
+                <div class="stat-title">예상 타격 횟수 (Overkill)</div>
+                <div class="stat-value" id="statStabCount">11회</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-title">혈흔 비산 발견 면 수</div>
+                <div class="stat-value" id="statBloodRange">2면</div>
+              </div>
+            </div>
+
+            <button class="action-btn-full" onclick="generateReport()">📄 프로파일링 감정서 발급하기</button>
+          </div>
+
+          <div>
+            <div class="crime-scene-map" id="crimeSceneMap">
+              <div class="room-outline">
+                <span class="room-label">실내 자택 현장 (Top-View)</span>
+                <div class="victim-marker">👤</div>
+              </div>
+            </div>
+
+            <div class="insight-box" id="insightText">
+              <!-- 상세 진단 내용이 여기에 실시간 렌더링됩니다 -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. BPA 혈흔 입사 각도 계산기 뷰 -->
+    <section id="view-calculator" class="view-section">
+      <div class="card">
+        <h2 style="color:var(--sky-blue); margin-bottom: 1.5rem;">📐 BPA 혈흔 형태 수학적 입사 각도 계산기</h2>
+        
+        <div class="simulator-grid">
+          <div>
+            <div class="control-group">
+              <label for="bloodWidth">혈흔 타원 너비 (Width, mm)</label>
+              <input type="number" id="bloodWidth" value="10" min="1" max="100" step="0.5" oninput="calculateImpactAngle()">
+              <div class="desc-text">혈흔 자국 타원의 단축(Short axis) 길이</div>
+            </div>
+
+            <div class="control-group">
+              <label for="bloodLength">혈흔 타원 길이 (Length, mm)</label>
+              <input type="number" id="bloodLength" value="20" min="1" max="200" step="0.5" oninput="calculateImpactAngle()">
+              <div class="desc-text">혈흔 자국 타원의 장축(Long axis) 길이</div>
+            </div>
+
+            <div class="result-stats">
+              <div class="stat-box">
+                <div class="stat-title">비산 입사 각도 (Impact Angle)</div>
+                <div class="stat-value" id="calcAngleResult">30.0°</div>
+              </div>
+              <div class="stat-box">
+                <div class="stat-title">비산 형태 평가</div>
+                <div class="stat-value" id="calcShapeGrade" style="font-size: 1.2rem; margin-top: 5px;">중각도 비산흔</div>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div class="calculator-preview-box" id="calcPreviewBox">
+              <div class="blood-drop-shape" id="bloodDropVisual" style="width: 80px; height: 160px;"></div>
+            </div>
+
+            <div class="insight-box" id="calcInsightText">
+              <strong>법과학 수학 공식 소견:</strong> sin(θ) = Width / Length 공식을 적용하여 산출된 입사 각도입니다. 수직 낙하에 가까울수록 원형에 수렴하며, 예각일수록 가늘고 긴 타원형태를 뱁니다.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. 판례 데이터 통계 대시보드 뷰 -->
+    <section id="view-dashboard" class="view-section">
+      <div class="card">
+        <div class="dashboard-header">
+          <h2 style="color:var(--sky-blue);">📊 판례 데이터 통계 대시보드 및 연구원 모드</h2>
+          <div class="filter-box">
+            <label style="font-size:0.85rem; color:var(--text-sub);">연구원 필터:</label>
+            <select id="dataFilter" onchange="filterChartData()">
+              <option value="all">전체 사건 (기본 + 추가 데이터)</option>
+              <option value="resistance">피해자 저항 있음 사건만</option>
+              <option value="no_resistance">피해자 저항 없음 사건만</option>
+            </select>
+          </div>
+        </div>
+
+        <p style="font-size:0.9rem; color:var(--text-sub); margin-bottom: 1rem;">
+          외향성/충동성 점수(X축)와 타격 횟수(Y축) 간의 산점도 및 실시간 상관계수($r$) 분석
+        </p>
+
+        <div class="chart-container">
+          <canvas id="correlationChart"></canvas>
+        </div>
+
+        <div class="contributor-box">
+          <h3 style="color:var(--sky-blue); margin-bottom: 0.8rem; font-size: 1.1rem;">🧪 나만의 가상 판례 코딩 및 데이터 추가 (Custom Contributor)</h3>
+          <p style="font-size: 0.85rem; color: var(--text-sub); margin-bottom: 1rem;">가상의 살인 사건 판례 데이터를 직접 입력하여 대시보드 산점도에 반영하고 전체 상관계수($r$) 변화를 관찰해 보세요.</p>
+          
+          <div class="contributor-grid">
+            <div class="control-group" style="margin-bottom:0;">
+              <label style="font-size:0.8rem;">외향성 점수 (1.0 ~ 5.0)</label>
+              <input type="number" id="newExtro" min="1" max="5" step="0.1" value="3.5">
+            </div>
+            <div class="control-group" style="margin-bottom:0;">
+              <label style="font-size:0.8rem;">타격 횟수 (Overkill)</label>
+              <input type="number" id="newStab" min="1" max="50" step="1" value="12">
+            </div>
+            <div class="control-group" style="margin-bottom:0;">
+              <label style="font-size:0.8rem;">피해자 저항 유무</label>
+              <select id="newResistance" style="width:100%; background:#18181b; color:#fff; border:1px solid var(--border-color); padding:10px; border-radius:8px; height:42px;">
+                <option value="1">저항 있음 (1)</option>
+                <option value="0">저항 없음 (0)</option>
+              </select>
+            </div>
+            <div>
+              <button class="action-btn-full" style="margin-top:0; height:42px;" onclick="addCustomCase()">+ 신규 판례 데이터 추가</button>
+            </div>
+          </div>
+        </div>
+
+        <h3 style="color:var(--sky-blue); margin-bottom: 1rem; font-size: 1.1rem;">🔍 특수 예외 케이스 프로파일링 카드</h3>
+        <div class="exception-cards-grid">
+          <div class="exception-card">
+            <h4>Case_10 (예외 케이스 1)</h4>
+            <p><strong>외향성 점수:</strong> 5점 (고충동형) | <strong>타격 횟수:</strong> 21회</p>
+            <p style="margin-top: 6px;"><strong>분석:</strong> 가해자의 충동성은 극극상이었으나 피해자의 물리적 저항이 없어 혈흔 비산 범위가 예상보다 좁은 벽면 일부에 머물렀습니다.</p>
+          </div>
+          <div class="exception-card">
+            <h4>Case_21 (예외 케이스 2)</h4>
+            <p><strong>외향성 점수:</strong> 4점 (외향형) | <strong>타격 횟수:</strong> 14회</p>
+            <p style="margin-top: 6px;"><strong>분석:</strong> 타격 횟수 대비 혈흔 비산 발견 면 수가 2면에 머문 사례로, 저항 부재 상황이 공간 확산을 제한하는 핵심 매개 요인임을 증명합니다.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. 프로파일링 보고서 뷰 -->
+    <section id="view-report" class="view-section">
+      <div class="card">
+        <div class="report-box" id="printableReport">
+          <div class="report-header-title">
+            <h3>강력범죄 현장 법의학-심리 프로파일링 감정서</h3>
+            <p>CRIME SCENE FORENSIC & PSYCHOLOGICAL PROFILING REPORT</p>
+          </div>
+
+          <div class="report-meta-grid">
+            <div><strong>사건 번호:</strong> <span id="repCaseNo">CASE-2026-0930</span></div>
+            <div><strong>감정 일시:</strong> <span id="repDate">2026-10-12</span></div>
+            <div><strong>분석 대상:</strong> 실내 날붙이(칼) 살인 사건</div>
+            <div><strong>적용 모델:</strong> 성격 3요인 및 혈흔수적분석(BPA) 회귀식</div>
+          </div>
+
+          <div class="report-section-title">1. 가해자 추정 성격 특성 (Psychological Profile)</div>
+          <div class="report-content-text" id="repPersonalityDesc">외향성 점수 3.0점 측정됨.</div>
+
+          <div class="report-section-title">2. 법과학적 가해 행위 분석 (Overkill & Stab Count)</div>
+          <div class="report-content-text" id="repStabDesc">부검 소견상 예상 창상 개수 약 11회 추정.</div>
+
+          <div class="report-section-title">3. 현장 혈흔 형태학적 역추적 소견 (Cast-off Spatter BPA)</div>
+          <div class="report-content-text" id="repBloodDesc">현장 비산 혈흔 발견 범위 총 2개 면 예측.</div>
+        </div>
+
+        <div style="display: flex; gap: 10px; margin-top: 1rem;">
+          <button class="action-btn-full" style="margin-top:0; background-color: #18181b; color: var(--sky-blue); border: 1px solid var(--sky-blue);" onclick="switchView('simulator')">&larr; 시뮬레이터로 돌아가기</button>
+          <button class="action-btn-full" style="margin-top:0;" onclick="window.print()">🖨️ 감정서 인쇄 / PDF 저장</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. 연구 아카이브 및 가이드 뷰어 뷰 -->
+    <section id="view-archive" class="view-section">
+      <div class="card">
+        <h2 style="color:var(--sky-blue); margin-bottom: 1.5rem;">📚 법의학-심리학 연구 아카이브 및 가이드</h2>
+        
+        <div class="guide-section">
+          <h3>연구 개요 및 초록 (Abstract)</h3>
+          <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+              <span>📄 본 연구 초록 및 핵심 가설 열람하기</span>
+              <span>&#9662;</span>
+            </div>
+            <div class="accordion-content">
+              본 연구는 범죄자의 외향성/충동성 성격 특성이 날붙이 살해 현장에서의 타격 횟수 및 비산 혈흔 범위에 미치는 영향을 검증하고자 수행되었습니다. 판례 30건 분석 결과, 외향성 점수는 타격 횟수(r = 0.951) 및 혈흔 분포 면 수(r = 0.977)와 매우 강력한 양의 상관관계를 보였습니다.
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+              <span>⚠️ 연구의 한계점 및 제언</span>
+              <span>&#9662;</span>
+            </div>
+            <div class="accordion-content">
+              * <strong>표본 수의 한계:</strong> 30건의 판례 분석으로 대규모 일반화에는 제한이 있음.<br>
+              * <strong>실내 현장 한정:</strong> 기후 변수 오염을 막기 위해 실내 자택/건물 내부로 한정하여 야외 적용 불가.<br>
+              * <strong>간접 척도 사용:</strong> 표준 검사가 아닌 판결문 키워드 기반 1~5점 사후 코딩 활용.
+            </div>
+          </div>
+        </div>
+
+        <div class="guide-section" style="margin-top: 2rem;">
+          <h3>변수 코딩 가이드라인 (Coding Scheme)</h3>
+          
+          <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+              <span>⚙️ 독립변수: 범죄자 외향성/충동성 수치 (1~5점 척도)</span>
+              <span>&#9662;</span>
+            </div>
+            <div class="accordion-content">
+              * <strong>1점:</strong> 내향적, 철저한 사전 계획형, 은둔형<br>
+              * <strong>3점:</strong> 중간 수준의 성향<br>
+              * <strong>5점:</strong> 외향적, 감정 조절 불능, 자극추구 및 충동적 성향
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+              <span>⚙️ 종속변수 및 통제변수 정의</span>
+              <span>&#9662;</span>
+            </div>
+            <div class="accordion-content">
+              * <strong>타격 횟수 (stab_count):</strong> 부검 소견상 창상(자상/베인 상처)의 총 개수<br>
+              * <strong>비산 혈흔 범위 (bloodstain_range):</strong> 혈흔 발견 면 수 (0점: 바닥만 ~ 3점: 천장 포함 3개 면 이상)<br>
+              * <strong>피해자 저항 유무 (victim_resistance):</strong> 0(저항 없음) / 1(저항 있음)
+            </div>
+          </div>
+        </div>
+
+        <div class="guide-section" style="margin-top: 2rem;">
+          <h3>핵심 참고문헌 목록</h3>
+          <div class="accordion-item">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+              <span>📖 선행연구 및 이론적 배경 참고문헌 열람</span>
+              <span>&#9662;</span>
+            </div>
+            <div class="accordion-content">
+              1. Eysenck, H. J. (1996). Personality and crime: Where do we stand? Psychology, Crime & Law.<br>
+              2. Douglas, J. E. et al. (1986). Criminal profiling from crime scene analysis. Behavioral Sciences & the Law.<br>
+              3. Wonder, A. K. (2007). Bloodstain Pattern Evidence: Objective Approaches and Case Applications.<br>
+              4. 박지선, 황성현 (2012). 살인범죄의 과도타격 영향요인에 관한 연구. 한국경찰학회보.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 7. 법과학 프로파일링 퀴즈 및 해설 뷰 -->
+    <section id="view-quiz" class="view-section">
+      <div class="card">
+        <div class="progress-bar-container" id="progressContainer">
+          <span>Question <strong id="currentQNum">1</strong> / 10</span>
+          <div class="progress-track">
+            <div class="progress-fill" id="progressFill" style="width: 10%;"></div>
+          </div>
+          <span id="progressPercent">10%</span>
+        </div>
+
+        <div id="questionArea">
+          <h2 class="question-title" id="qTitle">Q1. 현장 혈흔 및 타격 패턴 분석</h2>
+          <div class="scenario-box" id="qScenario">시나리오 로딩 중...</div>
+
+          <div class="options-group" id="optionsGroup"></div>
+
+          <div class="action-container">
+            <button class="next-btn" id="nextBtn" onclick="handleNext()">다음 문제 &rarr;</button>
+          </div>
+        </div>
+
+        <div class="result-container" id="resultContainer">
+          <h2>🎉 프로파일링 진단 완료</h2>
+          <p class="result-desc">법과학 혈흔 형태 분석(BPA)과 범죄 심리 프로파일링 역학 관계 테스트 결과입니다.</p>
+          <div class="result-score" id="finalScore">0 / 10점</div>
+          <p id="resultComment" style="margin-bottom: 1.5rem; color: #e2e8f0;"></p>
+          
+          <div class="result-btns">
+            <button class="explain-btn" onclick="showExplanations()">📖 정답 및 해설 보기</button>
+            <button class="restart-btn" onclick="restartQuiz()">퀴즈 다시 풀기</button>
+          </div>
+        </div>
+
+        <div class="explanation-container" id="explanationContainer">
+          <h2 style="color:var(--sky-blue); margin-bottom: 1.5rem; text-align: center;">📖 10문항 정답 및 상세 해설</h2>
+          <div id="explanationList"></div>
+          <div style="text-align: center; margin-top: 2rem;">
+            <button class="restart-btn" onclick="restartQuiz()">퀴즈 다시 풀기</button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- 푸터 -->
+  <footer>
+    <p>&copy; 2026 Crime Psychology & Forensic Lab. All rights reserved.</p>
+  </footer>
+
+  <script>
+    // 뷰 전환 관리 함수
+    function switchView(viewName) {
+      document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+      document.getElementById('view-' + viewName).classList.add('active');
+
+      const homeBtn = document.getElementById('homeBtn');
+      if (viewName === 'main') {
+        homeBtn.style.display = 'none';
+      } else {
+        homeBtn.style.display = 'block';
+        if (viewName === 'simulator') {
+          updateSimulation();
+        } else if (viewName === 'calculator') {
+          calculateImpactAngle();
+        } else if (viewName === 'dashboard') {
+          initChart();
+        } else if (viewName === 'quiz') {
+          restartQuiz();
+        }
+      }
+      window.scrollTo(0, 0);
+    }
+
+    // 아카이브 아코디언 토글
+    function toggleAccordion(headerEl) {
+      const content = headerEl.nextElementSibling;
+      content.classList.toggle('open');
+    }
+
+    // 시뮬레이터 로직 (향상된 심리 성향 및 법의학 역학 진단 반영)
+    let currentResistance = 1;
+    let globalCalculatedStab = 11;
+    let globalCalculatedRange = 2;
+    let globalExtro = 3.0;
+
+    function setResistance(val) {
+      currentResistance = val;
+      if (val === 1) {
+        document.getElementById('resistanceYesBtn').classList.add('active');
+        document.getElementById('resistanceNoBtn').classList.remove('active');
+      } else {
+        document.getElementById('resistanceNoBtn').classList.add('active');
+        document.getElementById('resistanceYesBtn').classList.remove('active');
+      }
+      updateSimulation();
+    }
+
+    function updateSimulation() {
+      globalExtro = parseFloat(document.getElementById('extroversionRange').value);
+      document.getElementById('extroValue').innerText = globalExtro.toFixed(1) + ' 점';
+
+      let baseStab = Math.round(1.5 + (globalExtro - 1) * 5.8);
+      globalCalculatedStab = Math.max(1, baseStab + (currentResistance * 2));
+
+      globalCalculatedRange = 0;
+      if (globalExtro <= 1.5) globalCalculatedRange = 0;
+      else if (globalExtro <= 3.0) globalCalculatedRange = 1;
+      else if (globalExtro <= 4.2) globalCalculatedRange = 2;
+      else globalCalculatedRange = 3;
+
+      if (currentResistance === 0 && globalCalculatedRange > 0) {
+        globalCalculatedRange -= 1;
+      }
+
+      document.getElementById('statStabCount').innerText = globalCalculatedStab + '회';
+      document.getElementById('statBloodRange').innerText = globalCalculatedRange + '개 면';
+
+      // 왜 이런 결과가 나오고 범죄자의 성향은 어떨 것인지에 대한 상세 진단 텍스트 구성
+      let insight = "";
+      if (globalExtro <= 2.0 && currentResistance === 0) {
+        insight = `<strong>[프로파일링 심층 진단 소견]</strong><br>` +
+                  `• <strong>범죄자 심리 성향:</strong> 내향적 성향이 강하고 정서적 억제력이 높으며, 철저한 사전 계획을 통해 범행을 통제하려는 은둔형·계획형 성향으로 추정됩니다. 감정적 폭발보다는 목적 중심적 행동 기제를 보입니다.<br>` +
+                  `• <strong>결과 도출 원리:</strong> 피해자의 물리적 저항이 전혀 수반되지 않아 범행 동선과 타격 궤적이 최소화되었습니다. 이에 따라 부검 상 창상 개수(<strong>${globalCalculatedStab}회</strong>)와 비산 혈흔 범위(<strong>${globalCalculatedRange}개 면</strong>)가 가장 협소하게 나타나는 전형적인 통제형 범행 현상입니다.`;
+      } else if (globalExtro >= 4.0 && currentResistance === 1) {
+        insight = `<strong>[프로파일링 심층 진단 소견]</strong><br>` +
+                  `• <strong>범죄자 심리 성향:</strong> 외향성과 충동성이 매우 높고 자극 추구 성향이 강하며, 스트레스 상황에서 감정적 통제력을 완전히 상실하는 폭발형·공격형 성향으로 추정됩니다.<br>` +
+                  `• <strong>결과 도출 원리:</strong> 가해자의 높은 충동성에 피해자의 적극적인 방어 및 물리적 저항(매개 변수)이 결합하면서 극심한 육탄전이 벌어졌습니다. 그 결과 흉기를 반복해서 휘두르는 과도 타격(Overkill, <strong>${globalCalculatedStab}회</strong>)이 발생했고, 원심력과 에너지 크기에 의해 천장을 포함한 사방(<strong>${globalCalculatedRange}개 면</strong>)으로 혈흔이 광범위하게 비산되었습니다.`;
+      } else {
+        insight = `<strong>[프로파일링 심층 진단 소견]</strong><br>` +
+                  `• <strong>범죄자 심리 성향:</strong> 외향성 점수 <strong>${globalExtro}점</strong>으로 중간 수준의 정서적 통제력과 상황적 가변성을 지닌 혼합형 성향으로 분석됩니다.<br>` +
+                  `• <strong>결과 도출 원리:</strong> 아이젠크 성격 이론의 회귀 분석 모델 및 혈흔수적분석(BPA) 원리에 따라, 타격 반복 횟수(<strong>${globalCalculatedStab}회</strong>)와 피해자 저항 유무 변수가 상호작용하여 바닥 및 벽면 일부(<strong>${globalCalculatedRange}개 면</strong>)에 제한적인 비산 혈흔 패턴을 형성했습니다.`;
+      }
+      document.getElementById('insightText').innerHTML = insight;
+
+      renderBloodSplatter(globalExtro, globalCalculatedRange, currentResistance);
+    }
+
+    function renderBloodSplatter(extro, rangeScore, resistance) {
+      const mapContainer = document.getElementById('crimeSceneMap');
+      const existingSplatters = mapContainer.querySelectorAll('.blood-splatter');
+      existingSplatters.forEach(el => el.remove());
+
+      let particleCount = Math.round(extro * 12 + (rangeScore * 15));
+      if (resistance === 0) particleCount = Math.round(particleCount * 0.7);
+
+      const centerX = mapContainer.clientWidth / 2;
+      const centerY = mapContainer.clientHeight / 2;
+
+      for (let i = 0; i < particleCount; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'blood-splatter';
+
+        let radiusSpread = 35 + (rangeScore * 30);
+        let angle = Math.random() * Math.PI * 2;
+        let distance = Math.random() * radiusSpread;
+
+        let x = centerX + Math.cos(angle) * distance;
+        let y = centerY + Math.sin(angle) * distance;
+        let size = Math.random() * 6 + 2;
+
+        dot.style.left = x + 'px';
+        dot.style.top = y + 'px';
+        dot.style.width = size + 'px';
+        dot.style.height = size + 'px';
+
+        mapContainer.appendChild(dot);
+      }
+    }
+
+    // BPA 입사 각도 계산기 로직
+    function calculateImpactAngle() {
+      let width = parseFloat(document.getElementById('bloodWidth').value);
+      let length = parseFloat(document.getElementById('bloodLength').value);
+
+      if (isNaN(width) || isNaN(length) || length <= 0) return;
+      if (width > length) {
+        width = length;
+        document.getElementById('bloodWidth').value = width;
+      }
+
+      let ratio = width / length;
+      let angleRad = Math.asin(ratio);
+      let angleDeg = angleRad * (180 / Math.PI);
+
+      document.getElementById('calcAngleResult').innerText = angleDeg.toFixed(1) + '°';
+
+      let grade = "";
+      if (angleDeg < 25) grade = "급각도 비산흔 (고속 투사)";
+      else if (angleDeg < 60) grade = "중각도 비산흔 (일반 타격)";
+      else grade = "수직 낙하 / 저속 흔적";
+      document.getElementById('calcShapeGrade').innerText = grade;
+
+      let visual = document.getElementById('bloodDropVisual');
+      visual.style.width = Math.min(140, Math.max(30, width * 4)) + 'px';
+      visual.style.height = Math.min(180, Math.max(40, length * 4)) + 'px';
+    }
+
+    // Chart.js 대시보드 산점도 및 Custom Contributor 로직
+    let scatterChart = null;
+    let rawMockData = [
+      { x: 1.0, y: 2, resistance: 1 }, { x: 1.2, y: 1, resistance: 0 }, { x: 1.5, y: 3, resistance: 1 },
+      { x: 2.0, y: 5, resistance: 1 }, { x: 2.2, y: 4, resistance: 0 }, { x: 2.5, y: 7, resistance: 1 },
+      { x: 3.0, y: 11, resistance: 1 }, { x: 3.0, y: 8, resistance: 0 }, { x: 3.5, y: 13, resistance: 1 },
+      { x: 4.0, y: 16, resistance: 1 }, { x: 4.0, y: 14, resistance: 0 }, { x: 4.5, y: 20, resistance: 1 },
+      { x: 5.0, y: 24, resistance: 1 }, { x: 5.0, y: 21, resistance: 0 }, { x: 4.8, y: 23, resistance: 1 }
+    ];
+
+    function calculatePearsonCorrelation(data) {
+      const n = data.length;
+      if (n <= 1) return 0.951;
+      let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0, sumY2 = 0;
+      data.forEach(d => {
+        sumX += d.x;
+        sumY += d.y;
+        sumXY += (d.x * d.y);
+        sumX2 += (d.x * d.x);
+        sumY2 += (d.y * d.y);
+      });
+      let numerator = (n * sumXY) - (sumX * sumY);
+      let denominator = Math.sqrt(((n * sumX2) - (sumX * sumX)) * ((n * sumY2) - (sumY * sumY)));
+      if (denominator === 0) return 0;
+      return numerator / denominator;
+    }
+
+    function initChart() {
+      const ctx = document.getElementById('correlationChart').getContext('2d');
+      if (scatterChart) scatterChart.destroy();
+
+      let currentCorr = calculatePearsonCorrelation(rawMockData).toFixed(3);
+
+      scatterChart = new Chart(ctx, {
+        type: 'scatter',
+        data: {
+          datasets: [{
+            label: `실내 살인 판례 코딩 데이터 (현재 상관계수 r = ${currentCorr})`,
+            data: rawMockData,
+            backgroundColor: '#38bdf8',
+            pointRadius: 6,
+            pointHoverRadius: 8
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: {
+              title: { display: true, text: '범죄자 외향성/충동성 점수 (1~5점)', color: '#94a3b8' },
+              grid: { color: '#27272a' },
+              ticks: { color: '#94a3b8' },
+              min: 0.5, max: 5.5
+            },
+            y: {
+              title: { display: true, text: '타격 횟수 (Overkill 회수)', color: '#94a3b8' },
+              grid: { color: '#27272a' },
+              ticks: { color: '#94a3b8' },
+              min: 0, max: 50
+            }
+          },
+          plugins: {
+            legend: { labels: { color: '#f8fafc' } }
+          }
+        }
+      });
+    }
+
+    function filterChartData() {
+      const filterVal = document.getElementById('dataFilter').value;
+      let filtered = rawMockData;
+      if (filterVal === 'resistance') filtered = rawMockData.filter(d => d.resistance === 1);
+      else if (filterVal === 'no_resistance') filtered = rawMockData.filter(d => d.resistance === 0);
+      
+      let corr = calculatePearsonCorrelation(filtered).toFixed(3);
+      scatterChart.data.datasets[0].label = `실내 살인 판례 코딩 데이터 (상관계수 r = ${corr})`;
+      scatterChart.data.datasets[0].data = filtered;
+      scatterChart.update();
+    }
+
+    function addCustomCase() {
+      let extro = parseFloat(document.getElementById('newExtro').value);
+      let stab = parseInt(document.getElementById('newStab').value);
+      let res = parseInt(document.getElementById('newResistance').value);
+
+      if (isNaN(extro) || isNaN(stab)) {
+        alert('올바른 외향성 점수와 타격 횟수를 입력해 주세요!');
+        return;
+      }
+
+      rawMockData.push({ x: extro, y: stab, resistance: res });
+      filterChartData();
+      alert(`신규 판례 데이터(외향성: ${extro}점, 타격: ${stab}회)가 성공적으로 추가되었습니다! 산점도 그래프와 상관계수(r)가 실시간 갱신되었습니다.`);
+    }
+
+    // 프로파일링 보고서 생성 함수
+    function generateReport() {
+      document.getElementById('repCaseNo').innerText = 'CASE-2026-' + Math.floor(1000 + Math.random() * 9000);
+      document.getElementById('repDate').innerText = new Date().toISOString().slice(0, 10);
+
+      let pType = globalExtro >= 4.0 ? "외향성 및 고충동성 자극추구형" : (globalExtro <= 2.0 ? "내향성 및 철저한 사전 계획형" : "중간 수준의 정서 통제 및 혼합형 성향");
+      document.getElementById('repPersonalityDesc').innerHTML = `외향성/충동성 점수 <strong>${globalExtro}점</strong> 측정됨. ${pType}. 아이젠크 성격 이론에 비추어 외부 자극에 대한 반응성이 높고 감정적 억제력이 제한적일 가능성이 시사됨.`;
+
+      document.getElementById('repStabDesc').innerHTML = `부검 소견상 예상 창상 개수(과도 타격 횟수)는 <strong>약 ${globalCalculatedStab}회</strong>로 분석됨. 외향성 점수와 타격 횟수 간의 통계적 상관계수 모델을 적용하여 산출됨.`;
+
+      let resistanceText = currentResistance === 1 ? "피해자의 물리적 저항(Defense mark)이 수반됨." : "피해자의 물리적 저항이 전혀 수반되지 않음.";
+      document.getElementById('repBloodDesc').innerHTML = `현장의 비산 혈흔(Cast-off) 발견 범위는 바닥 및 벽면을 포함하여 <strong>총 ${globalCalculatedRange}개 면</strong>으로 예측됨. 통제 변수인 [${resistanceText}] 요인이 반영되어 최종 공간 확산 반경이 결정됨.`;
+
+      switchView('report');
+    }
+
+    function generateReportFromHub() {
+      updateSimulation();
+      generateReport();
+    }
+
+    // 퀴즈 데이터셋 (10문항)
+    const quizData = [
+      {
+        title: "Q1. 현장 혈흔 및 타격 패턴 분석",
+        scenario: "실내 살인 사건 현장에서 벽면과 천장을 포함한 3개 면 이상에 광범위한 비산 혈흔(Cast-off)이 관찰되었으며, 부검 결과 20회 이상의 과도 타격(Overkill) 흔적이 확인되었습니다. 아이젠크 성격 이론에 입각해 추론할 수 있는 가해자의 심리 특성은 무엇인가요?",
+        options: [
+          "① 내향성이 높고 철저한 사전 계획을 통해 최소한의 타격만 가했을 것이다.",
+          "② 외향성과 충동성이 높아 자극 추구 성향 및 감정적 폭발로 인한 과도 타격이 발생했을 것이다.",
+          "③ 성격적 특성과 현장의 혈흔 형태 범위는 아무런 연관이 없으며 오직 날씨에 의해 결정된다.",
+          "④ 피해자의 물리적 저항이 전혀 없었기 때문에 혈흔이 전혀 비산되지 않았다."
+        ],
+        answer: 1,
+        explanation: "외향성이 높을수록 정서적 억제력이 낮고 자극 추구 성향이 강해 감정 폭발 시 과도 타격(Overkill)을 가하게 됩니다."
+      },
+      {
+        title: "Q2. 외향성 변수와 타격 횟수의 상관관계",
+        scenario: "본 연구 논문의 통계 결과에 따르면, 범죄자의 외향성/충동성 점수와 날붙이 범행 시 타격 횟수 간에는 매우 강력한 양의 상관관계가 도출되었습니다. 이 상관계수(r) 값으로 가장 적절한 것은?",
+        options: [
+          "① r = 0.051 (상관없음)",
+          "② r = 0.421 (약한 상관)",
+          "③ r = 0.951 (매우 강력한 양의 상관관계)",
+          "④ r = -0.951 (완벽한 음의 상관관계)"
+        ],
+        answer: 2,
+        explanation: "논문 통계 분석 결과 외향성 점수와 타격 횟수 간의 피어슨 상관계수는 r = 0.951 (p < 0.001)로 매우 강력한 양(+)의 상관을 보였습니다."
+      },
+      {
+        title: "Q3. 혈흔 형태학(BPA)과 역학적 원리",
+        scenario: "법과학 혈흔수적분석(BPA) 원리에 비추어 볼 때, 현장에 남는 비산 혈흔(Cast-off)의 방사 면적과 범위를 직접 결정짓는 핵심 물리적 요인은 무엇인가요?",
+        options: [
+          "① 가해자가 흉기를 휘두르는 반복 횟수와 에너지(힘)의 크기",
+          "② 피해자의 연령 및 거주 지역의 경제 수준",
+          "③ 범죄 발생 당시의 실내 조명 밝기와 인테리어 벽지 색상",
+          "④ 피고인의 법정 최종 진술 태도"
+        ],
+        answer: 0,
+        explanation: "혈흔수적분석(BPA) 원리에 따라 흉기를 반복해서 휘두르는 횟수와 에너지 크기가 비산 혈흔의 방사 면적을 직접 결정합니다."
+      },
+      {
+        title: "Q4. 예외 케이스(Case_10, 21) 분석의 시사점",
+        scenario: "외향성 점수가 매우 높았음에도 불구하고 혈흔 비산 범위가 예상보다 다소 좁게 측정된 예외 사건(Case_10)이 존재했습니다. 이 현상을 설명하는 핵심 통제 변수는 무엇이었나요?",
+        options: [
+          "① 피해자의 물리적 저항이 전혀 수반되지 않아 가해자의 궤적이 제한되었음",
+          "② 범행 장소가 야외 공원이어서 바람에 의해 혈흔이 날아갔음",
+          "③ 흉기로 칼이 아닌 둔기를 사용했음",
+          "④ 가해자가 범행 후 현장을 깨끗이 물청소했음"
+        ],
+        answer: 0,
+        explanation: "피해자의 물리적 저항이 없을 경우, 가해 행동의 격렬함에도 불구하고 비산 혈흔의 반경이 축소된다는 예외 케이스 분석 결과에 기인합니다."
+      },
+      {
+        title: "Q5. 내향적 범죄자의 범행 양상",
+        scenario: "아이젠크 성격 이론과 범죄 심리 선행연구에 기반할 때, 내향성 성향이 강한 범죄자가 살인 범행 시 보이는 전형적인 가해 행동 기제는 무엇인가요?",
+        options: [
+          "① 감정 조절을 하지 못하고 수십 회 이상 무차별 난동을 부림",
+          "② 목적 달성을 위해 최소한의 정밀한 타격으로 상황을 종결하려 함",
+          "③ 현장 한가운데 증거를 고의로 대량 방치함",
+          "④ 무작위 타인을 대상으로 광범위한 원거리 투사 공격을 감행함"
+        ],
+        answer: 1,
+        explanation: "내향적 범죄자는 내부 통제력이 높고 발각 불안이 커서 최소한의 정밀한 타격으로 범행을 완수하려는 경향이 있습니다."
+      },
+      {
+        title: "Q6. 연구 데이터의 수집 범위 및 통제 조건",
+        scenario: "본 연구가 외생변수(기후, 풍향 등)에 의한 혈흔 오염을 차단하기 위해 연구 설계를 수정하면서 범행 장소를 고정한 조건은 무엇인가요?",
+        options: [
+          "① 실내 현장(자택 및 건물 내부)으로 한정",
+          "② 야외 공터 및 도로변으로 한정",
+          "③ 고속도로 휴게소 내부로 한정",
+          "④ 지하철 객실 내부로 한정"
+        ],
+        answer: 0,
+        explanation: "야외 현장의 경우 바람이나 비에 의해 혈흔이 씻겨 나가므로, 기후 변수 오염을 막기 위해 실내 현장으로 공간 조건을 고정했습니다."
+      },
+      {
+        title: "Q7. 프로파일링의 오류 위험성 경고",
+        scenario: "가설이 기각되거나 반증되는 조건(Null Hypothesis)을 검토했을 때, 수사 현장에서 경계해야 할 논리적 오류(Logical Fallacy)로 가장 올바른 것은?",
+        options: [
+          "① 현장에 피가 많이 튀어 있다고 해서 무조건 범인의 외향성/충동성을 성급하게 단정 짓는 도피적 추론",
+          "② 부검 소견서 상의 창상 개수를 정확히 세어보는 과학적 태도",
+          "③ 피해자의 방어 흔적(Defense mark)을 법의학적으로 분석하는 행위",
+          "④ 실내 공간의 구조적 한계를 통제 변수로 반영하는 조치"
+        ],
+        answer: 0,
+        explanation: "혈흔 형태가 심리보다 물리적 저항에 영향받을 수 있으므로 성급하게 성격을 단정 짓는 도피적 추론을 경계해야 합니다."
+      },
+      {
+        title: "Q8. 흉기 제한 조건의 과학적 타당성",
+        scenario: "본 연구에서 분석 대상을 '날붙이(칼)'를 사용한 살인 사건으로 엄격히 제한한 주된 이유는 무엇인가요?",
+        options: [
+          "① 총기류나 독극물 사건과 달리, 날붙이 범행은 근접 육탄전에서 발생하는 과도 타격과 혈흔 비산 양상을 직접 관찰할 수 있기 때문",
+          "② 대한민국에서는 칼을 제외한 다른 흉기로 인한 범죄 판례가 전혀 존재하지 않기 때문",
+          "③ 판결문에 칼의 브랜드 이름이 의무적으로 기재되기 때문",
+          "④ 통계 프로그램이 칼 이외의 데이터는 처리를 거부하기 때문"
+        ],
+        answer: 0,
+        explanation: "날붙이를 사용한 근접 육탄전에서만 과도 타격과 비산 혈흔 패턴의 인과관계를 명확히 추출할 수 있기 때문입니다."
+      },
+      {
+        title: "Q9. 성격 수치 코딩 방법론의 한계",
+        scenario: "본 연구에서 범죄자의 외향성/충동성 수치를 도출하기 위해 활용한 현실적인 데이터 추출 방식은 무엇인가요?",
+        options: [
+          "① 판결문 및 정신감정서 상에 기술된 심리·성격 관련 키워드를 기준에 따라 1~5점 척도로 사후 정량화(코딩)",
+          "② 수감 중인 범죄자를 교도소에 직접 찾아가 MBTI 검사를 실시함",
+          "③ 범죄자의 SNS 계정을 해킹하여 실시간 성격 진단을 수행함",
+          "④ 피해자 유가족의 주관적 인상에만 전적으로 의존함"
+        ],
+        answer: 0,
+        explanation: "공개된 판결문 및 정신감정서의 심리 기술 키워드를 1~5점 척도로 사후 정량 코딩하여 통계 분석에 활용했습니다."
+      },
+      {
+        title: "Q10. 본 연구가 지향하는 최종 결론",
+        scenario: "본 연구가 실증 판례 분석을 통해 최종적으로 입증하고자 한 핵심 학술적 가치는 무엇인가요?",
+        options: [
+          "① 현장 혈흔 형태학과 과도 타격 흔적이 범죄자의 성격 특성을 역추적하는 유효한 프로파일링 단서가 됨을 실증함",
+          "② 범죄자의 성격은 어떠한 법과학적 증거로도 절대 추적할 수 없음을 증명함",
+          "③ 날붙이 살인 사건은 100% 우발적이며 심리적 동기가 존재하지 않음을 밝힘",
+          "④ 모든 범죄 현장의 혈흔은 기후 조건에 의해 임의로 조작된다는 것을 주장함"
+        ],
+        answer: 0,
+        explanation: "혈흔의 공간적 분포와 타격 횟수가 범죄자의 충동성 및 성격적 성향을 역추적하는 프로파일링 단서가 됨을 입증했습니다."
+      }
+    ];
+
+    let currentIdx = 0;
+    let score = 0;
+    let selectedOption = null;
+
+    function loadQuiz() {
+      selectedOption = null;
+      const current = quizData[currentIdx];
+
+      document.getElementById('currentQNum').innerText = currentIdx + 1;
+      const progressPercent = ((currentIdx + 1) / quizData.length) * 100;
+      document.getElementById('progressFill').style.width = progressPercent + '%';
+      document.getElementById('progressPercent').innerText = Math.round(progressPercent) + '%';
+
+      document.getElementById('qTitle').innerText = current.title;
+      document.getElementById('qScenario').innerText = current.scenario;
+
+      const optionsGroup = document.getElementById('optionsGroup');
+      optionsGroup.innerHTML = '';
+
+      current.options.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerText = opt;
+        btn.onclick = () => selectOption(idx, btn);
+        optionsGroup.appendChild(btn);
+      });
+    }
+
+    function selectOption(idx, btnElement) {
+      const buttons = document.querySelectorAll('.option-btn');
+      buttons.forEach(b => b.classList.remove('selected'));
+      btnElement.classList.add('selected');
+      selectedOption = idx;
+    }
+
+    function handleNext() {
+      if (selectedOption === null) {
+        alert('보기를 선택해 주세요!');
+        return;
+      }
+
+      if (selectedOption === quizData[currentIdx].answer) {
+        score += 1;
+      }
+
+      currentIdx++;
+
+      if (currentIdx < quizData.length) {
+        loadQuiz();
+      } else {
+        showResult();
+      }
+    }
+
+    function showResult() {
+      document.getElementById('progressContainer').style.display = 'none';
+      document.getElementById('questionArea').style.display = 'none';
+      
+      const resultContainer = document.getElementById('resultContainer');
+      resultContainer.style.display = 'block';
+
+      document.getElementById('finalScore').innerText = `${score} / ${quizData.length}점`;
+
+      let comment = "";
+      if (score >= 9) {
+        comment = "탁월합니다! 법과학 혈흔 형태 분석(BPA)과 범죄 심리 프로파일링 간의 상관관계 메커니즘을 완벽하게 이해하고 계시군요!";
+      } else if (score >= 6) {
+        comment = "우수한 성적입니다! 외향성/충동성 성격 변수와 현장 과도 타격(Overkill) 간의 연관성을 잘 파악하고 계십니다.";
+      } else {
+        comment = "수고하셨습니다! 연구 논문의 세부 통계 모델과 예외 변수(저항 유무) 내용을 다시 한번 살펴보시면 더욱 완벽해질 것입니다.";
+      }
+      document.getElementById('resultComment').innerText = comment;
+    }
+
+    function showExplanations() {
+      document.getElementById('resultContainer').style.display = 'none';
+      const explanationContainer = document.getElementById('explanationContainer');
+      const explanationList = document.getElementById('explanationList');
+      explanationList.innerHTML = '';
+
+      quizData.forEach((q, idx) => {
+        const card = document.createElement('div');
+        card.className = 'explanation-card';
+        card.innerHTML = `
+          <h4>${idx + 1}. ${q.title}</h4>
+          <p style="color:#94a3b8; font-size:0.85rem; margin-bottom:6px;">${q.scenario}</p>
+          <div class="correct-answer-text">정답: ${q.options[q.answer]}</div>
+          <p style="margin-top: 6px;"><strong>해설:</strong> ${q.explanation}</p>
+        `;
+        explanationList.appendChild(card);
+      });
+
+      explanationContainer.style.display = 'block';
+    }
+
+    function restartQuiz() {
+      currentIdx = 0;
+      score = 0;
+      selectedOption = null;
+      document.getElementById('progressContainer').style.display = 'flex';
+      document.getElementById('questionArea').style.display = 'block';
+      document.getElementById('resultContainer').style.display = 'none';
+      document.getElementById('explanationContainer').style.display = 'none';
+      loadQuiz();
+    }
+  </script>
+</body>
+</html>
